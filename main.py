@@ -5,8 +5,9 @@ import re
 import datetime
 import json
 ##################参数####################
-##########把下面替换我换位你的cookie#######
-COOKIE='替换我'
+##########COOKIE可以手动指定你的cookie#####
+##########覆盖之后cookie.txt失效##########
+COOKIE=''
 ##########################################
 #点赞评论都是这种
 base_header = {
@@ -98,11 +99,15 @@ class XM_BBS():
         data['vip_community_pc_ph'] = (None, self.info['vip_community_pc_ph'])
         res = requests.post(url=thumbup_API, headers=headers, files=data)
         res = res.json()
-        if res['message'] == 'ok':
-            return True
-        else:
-            print(res['message'])
-            return False
+        try:
+            if res['message'] == 'ok':
+                return True
+            else:
+                print(res['message'])
+                return False
+        except:
+            print(res)
+            exit(-1)
     #stype latest
 
     def GetPosts(self, after, stype='hot'):
@@ -138,11 +143,15 @@ class XM_BBS():
         data['vip_community_pc_ph'] = (None, self.info['vip_community_pc_ph'])
         res = requests.post(url=comment_API, headers=headers, files=data)
         res = res.json()
-        if res['message'] == 'ok':
-            return True
-        else:
-            print(res['message'])
-            return False
+        try:
+            if res['message'] == 'ok':
+                return True
+            else:
+                print(res['message'])
+                return False
+        except:
+            print(res)
+            exit(-1)
 
     def thumbup_comment(self, post_id, commentId):
         (cookie, csrf_token) = self.GenCookie()
@@ -155,11 +164,15 @@ class XM_BBS():
         data['vip_community_pc_ph'] = (None, self.info['vip_community_pc_ph'])
         res = requests.post(url=commentup_API, headers=headers, files=data)
         res = res.json()
-        if res['message'] == 'ok':
-            return True
-        else:
-            print(res['message'])
-            return False
+        try:
+            if res['message'] == 'ok':
+                return True
+            else:
+                print(res['message'])
+                return False
+        except:
+            print(res)
+            exit(-1)
 
     def GetComments(self, postId, after, sorttype=1):
         (cookie, csrf_token) = self.GenCookie()
@@ -182,13 +195,12 @@ def LikeComment(Client: XM_BBS, postId):
         counts = comments['entity']['total']
         res = comments['entity']['records']
         for i in res:
-            if (count == 0):
-                #pass
-                if (Client.Comment(i['text'], postId)):
-                    print("复制热评回复成功")
             count += 1
             if Client.thumbup_comment(postId, i['commentId']):
                 print("["+str(count)+"]"+"评论"+'"'+i['text']+'"'+"点赞成功！")
+                if (count == 1):
+                    if (Client.Comment(i['text'], postId)):
+                        print("复制热评回复成功")
             else:
                 return
         base += 10
@@ -211,5 +223,15 @@ def AutoLike(Client: XM_BBS, stype='hot'):
 
 
 if __name__ == '__main__':
-    Client = XM_BBS(COOKIE)
+    cookie=''
+    if not COOKIE:
+        try:
+            with open("cookie.txt",'r',encoding='utf-8') as f:
+                cookie=f.read()
+        except:
+            print("未在代码中指定cookie且cookie.txt不存在")
+            exit(-1)
+    else:
+        cookie=COOKIE
+    Client = XM_BBS(cookie)
     AutoLike(Client)
