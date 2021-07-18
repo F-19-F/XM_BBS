@@ -8,6 +8,8 @@ import json
 ##########COOKIE可以手动指定你的cookie#####
 ##########覆盖之后cookie.txt失效##########
 COOKIE=''
+AUTOCOMMENT=True#修改为False则不自动复制热评回复
+BOARDID=''#需要在哪个板块操作 5433318--为开发版公测 5428803--开发版内测 ，请确保有对应的浏览权限。
 ##########################################
 #点赞评论都是这种
 base_header = {
@@ -109,18 +111,23 @@ class XM_BBS():
             print(res)
             exit(-1)
     #stype latest
-
-    def GetPosts(self, after, stype='hot'):
+    def GetPosts(self, after, stype='hot', boardId=''):
         (cookie, csrf_token) = self.GenCookie()
         headers = base_header
         headers['Cookie'] = cookie
         if after == 0:
             after = ''
         #这个是获取已进入圈子的帖子的API
-        API = 'https://prod.api.xiaomi.cn/community/board/followed/announce/list?after={after}&limit=10&stype={stype}'.format(
-            after=after, stype=stype)
-        #下面是板块的API(5433318为公测的boardId)
-        #API = 'https://prod.api.xiaomi.cn/community/board/search/announce/list?after={after}&boardId=5433318&profileType=0&displayName=%E5%85%A8%E9%83%A8'.format(after=after)
+        if boardId == '':
+            API = 'https://prod.api.xiaomi.cn/community/board/followed/announce/list?after={after}&limit=10&stype={stype}'.format(
+                after=after,
+                stype=stype
+                )
+        else:
+            API = 'https://prod.api.xiaomi.cn/community/board/search/announce/list?after={after}&limit=10&boardId={boardId}&profileType=1&displayName=%E5%85%A8%E9%83%A8'.format(
+                after=after,
+                boardId=boardId
+                )
         res = requests.get(url=API, headers=headers)
         return res.json()
 
@@ -198,7 +205,7 @@ def LikeComment(Client: XM_BBS, postId):
             count += 1
             if Client.thumbup_comment(postId, i['commentId']):
                 print("["+str(count)+"]"+"评论"+'"'+i['text']+'"'+"点赞成功！")
-                if (count == 1):
+                if AUTOCOMMENT and (count == 1):
                     if (Client.Comment(i['text'], postId)):
                         print("复制热评回复成功")
             else:
@@ -210,7 +217,7 @@ def LikeComment(Client: XM_BBS, postId):
 def AutoLike(Client: XM_BBS, stype='hot'):
     c = 0
     for i in range(0, 1000, 10): #最大1000
-        posts = Client.GetPosts(i, stype)
+        posts = Client.GetPosts(i, stype ,boardId=BOARDID)
         res = posts['entity']['records']
         for j in res:
             if not Client.thumbup(j['id']):
