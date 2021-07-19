@@ -216,8 +216,10 @@ def LikeComment(Client: XM_BBS, postId):
 #stype为帖子排序类型，lastest或hot
 def AutoLike(Client: XM_BBS, stype='hot'):
     c = 0
+    after=''
     for i in range(0, 1000, 10): #最大1000
-        posts = Client.GetPosts(i, stype ,boardId=BOARDID)
+        posts = Client.GetPosts(after, stype ,boardId=BOARDID)
+        after=posts['entity']['after']
         res = posts['entity']['records']
         for j in res:
             if not Client.thumbup(j['id']):
