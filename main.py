@@ -217,7 +217,7 @@ def LikeComment(Client: XM_BBS, postId):
 def AutoLike(Client: XM_BBS, stype='hot'):
     c = 0
     after=''
-    for i in range(0, 1000, 10): #最大1000
+    for i in range(0, 1000): #最大1000
         posts = Client.GetPosts(after, stype ,boardId=BOARDID)
         after=posts['entity']['after']
         res = posts['entity']['records']
